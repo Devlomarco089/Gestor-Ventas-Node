@@ -41,11 +41,29 @@ export class Producto {
       );
     }
 
+  
     return new Producto({
       id: this.id,
       nombre: this.nombre,
       precioCentavos: this.precioCentavos,
       stock: this.stock - cantidad,
     });
+  }
+
+  conStockRestituido(cantidad)
+  {
+    if (!Number.isSafeInteger(cantidad)||cantidad <=0)
+    {
+      throw new DatosInvalidos('La cantidad debe ser un entero positivo')
+      
+    }
+
+    return new Producto(
+    {
+      id: this.id,
+      nombre: this.nombre,
+      precioCentavos: this.precioCentavos,
+      stock: this.stock + cantidad,
+    })
   }
 }
