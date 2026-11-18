@@ -66,11 +66,13 @@ export class Caja {
   }
 
   calcularMontoEsperadoCentavos() {
-    return sumarCentavos(
-      this.movimientos
-        .filter((movimiento) => movimiento.medio === 'efectivo')
-        .map((movimiento) => movimiento.montoCentavos),
-    );
+    const ingresos = this.movimientos
+      .filter((movimiento)=> movimiento.medio ==='efectivo' && movimiento.tipo !== 'anulacion')
+      .map((movimiento) => movimiento.montoCentavos)
+      const anulaciones = this.movimientos
+      .filter((movimiento)=> movimiento.medio ==='efectivo' && movimiento.tipo === 'anulacion')
+      .map((movimiento) => movimiento.montoCentavos)
+    return restarCentavos(sumarCentavos(ingresos), sumarCentavos(anulaciones));
   }
 
   agregarPago({ id, ventaId, medio, montoCentavos, fecha }) {
@@ -96,6 +98,32 @@ export class Caja {
       montoCentavos,
       fecha,
     });
+  }
+  anularPago({id, ventaId, medio, montoCentavos, fecha})
+  {
+    if (!this.estaAbierta)
+    {
+      throw new CajaNoAbierta('La caja está cerrada  y no admite movimientos')
+    }
+    if (!MEDIOS_DE_PAGO.has(medio))
+    {
+      throw new DatosInvalidos(`El medio de pago"${medio}" no es válido`)
+    }
+    exigirCentavosPositivos(montoCentavos, 'montoCentavos')
+    if(typeof id !=='string' || id.trim() ==='' || typeof ventaId !=='string' || ventaId.trim() === '')
+    {
+      throw new DatosInvalidos(`El movimiento debe tener id y venta aociadas`)
+    }
+    this.movimientos.push(
+      {
+        id,
+        tipo:'anulacion',
+        ventaId,
+        medio,
+        montoCentavos,
+        fecha,
+      }
+    )
   }
 
   cerrar({ montoContadoCentavos, cerradaPor, fecha }) {
