@@ -30,3 +30,12 @@ export const datosSemilla = [
     stock: 10,
   },
 ];
+
+// reglas de descuento de ejemplo (Franco)
+// elegidas para que no cambien los tests de integracion que ya estaban
+export const reglasDescuentoSemilla = [
+  // 10 % en el arroz siempre
+  { id: 'desc-arroz-10', tipo: 'producto', productoId: 'prod-5', porcentajeBp: 1000 },
+  // 15 % en la yerba llevando 3 o mas
+  { id: 'desc-yerba-3', tipo: 'cantidad', productoId: 'prod-2', cantidadMinima: 3, porcentajeBp: 1500 },
+];
