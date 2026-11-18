@@ -1,14 +1,18 @@
-import express from 'express';
-import { config } from './config/index.js';
+import { pathToFileURL } from 'node:url';
 
-const app = express();
+import { crearComposicion } from './composicion.js';
+import { crearApp } from './infra/http/crearApp.js';
 
-app.use(express.json());
+export const app = crearApp(crearComposicion());
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+const esEjecucionDirecta =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
 
-app.listen(config.port, () => {
-  console.log(`Servidor escuchando en el puerto ${config.port}`);
-});
+if (esEjecucionDirecta) {
+  const { config } = await import('./config/index.js');
+
+  app.listen(config.port, () => {
+    console.log(`Servidor escuchando en el puerto ${config.port}`);
+  });
+}
