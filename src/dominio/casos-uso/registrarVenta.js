@@ -75,6 +75,9 @@ export async function registrarVenta(
     almacenIdempotencia,
     generadorIds,
     reloj,
+    // agregados por Franco, los dos son opcionales para no romper lo que ya andaba
+    repositorioDescuentos = null,
+    bloqueos = SIN_BLOQUEOS,
   },
   { usuario, claveIdempotencia, items, pagos },
 ) {
@@ -95,6 +98,47 @@ export async function registrarVenta(
     pagos: pagosNormalizados,
   });
 
+  // todo lo que sigue corre con los bloqueos tomados (Franco)
+  // se bloquea la clave de idempotencia (dos reintentos a la vez no duplican), la caja del
+  // cajero y cada producto (dos ventas de la ultima unidad no la venden dos veces)
+  // el que llega segundo espera y cuando entra ya ve el stock descontado por el primero
+  const claves = [
+    `idempotencia:${clave}`,
+    `caja:${usuario.id}`,
+    ...itemsNormalizados.map((item) => `producto:${item.productoId}`),
+  ];
+
+  return bloqueos.conBloqueo(claves, () => registrarDentroDelBloqueo({
+    repositorioProductos,
+    repositorioCajas,
+    repositorioVentas,
+    almacenIdempotencia,
+    generadorIds,
+    reloj,
+    repositorioDescuentos,
+  }, { usuario, clave, huella, itemsNormalizados, pagosNormalizados }));
+}
+
+// si no pasan bloqueos se corre sin bloquear, sirve para el test que muestra el problema
+const SIN_BLOQUEOS = {
+  async conBloqueo(_claves, tarea) {
+    return tarea();
+  },
+};
+
+// esto es lo que ya estaba hecho, solo se movio aca adentro para que corra bloqueado
+async function registrarDentroDelBloqueo(
+  {
+    repositorioProductos,
+    repositorioCajas,
+    repositorioVentas,
+    almacenIdempotencia,
+    generadorIds,
+    reloj,
+    repositorioDescuentos,
+  },
+  { usuario, clave, huella, itemsNormalizados, pagosNormalizados },
+) {
   const registro = await almacenIdempotencia.obtener(clave);
 
   if (registro) {
@@ -145,6 +189,9 @@ export async function registrarVenta(
     productosActualizados.push(producto.conStockDescontado(cantidad));
   }
 
+  // reglas de descuento vigentes, si no hay repositorio no se descuenta nada (Franco)
+  const reglasDescuento = repositorioDescuentos ? await repositorioDescuentos.listar() : [];
+
   const venta = Venta.crear({
     id: generadorIds.generar(),
     cajaId: caja.id,
@@ -152,6 +199,7 @@ export async function registrarVenta(
     items: itemsVenta,
     pagos: pagosNormalizados,
     fecha: reloj.ahora(),
+    reglasDescuento,
   });
 
   for (const producto of productosActualizados) {

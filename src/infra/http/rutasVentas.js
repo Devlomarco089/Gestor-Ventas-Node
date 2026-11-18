@@ -13,6 +13,7 @@ function serializarVenta(venta) {
     cajeroId: venta.cajeroId,
     items: venta.items,
     pagos: venta.pagos,
+    descuentoCentavos: venta.descuentoCentavos,
     totalCentavos: venta.totalCentavos,
     fecha: venta.fecha,
   };
