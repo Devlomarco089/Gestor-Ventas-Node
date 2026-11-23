@@ -138,6 +138,15 @@ export function validarIdempotencyKey(req) {
   return clave.trim();
 }
 
+export function validarAnulacion(body) {
+  const datos = exigirObjeto(body, 'El cuerpo');
+  exigirCamposExactos(datos, ['motivo'], 'la anulación');
+
+  return {
+    motivo: exigirStringNoVacio(datos.motivo, 'motivo'),
+  };
+}
+
 export function validarIdVenta(valor) {
   return exigirStringNoVacio(valor, 'id');
 }

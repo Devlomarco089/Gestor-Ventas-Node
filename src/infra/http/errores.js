@@ -10,6 +10,7 @@ const ESTADOS_POR_CODIGO_DOMINIO = {
   PagosNoCuadran: 422,
   ProductoNoEncontrado: 422,
   VentaNoEncontrada: 404,
+  VentaYaAnulada: 409,
   IdempotenciaConflicto: 422,
   ImporteInvalido: 400,
   DatosInvalidos: 400,

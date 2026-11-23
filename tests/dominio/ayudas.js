@@ -1,10 +1,12 @@
 import { abrirCaja } from '../../src/dominio/casos-uso/abrirCaja.js';
+import { anularVenta } from '../../src/dominio/casos-uso/anularVenta.js';
 import { cerrarCaja } from '../../src/dominio/casos-uso/cerrarCaja.js';
 import { obtenerCajaActual } from '../../src/dominio/casos-uso/obtenerCajaActual.js';
 import { obtenerVenta } from '../../src/dominio/casos-uso/obtenerVenta.js';
 import { registrarVenta } from '../../src/dominio/casos-uso/registrarVenta.js';
 import { Producto } from '../../src/dominio/producto.js';
 import { crearAlmacenIdempotenciaMemoria } from '../../src/infra/memoria/almacenIdempotenciaMemoria.js';
+import { crearRepositorioAnulacionesMemoria } from '../../src/infra/memoria/repositorioAnulacionesMemoria.js';
 import { crearRepositorioCajasMemoria } from '../../src/infra/memoria/repositorioCajasMemoria.js';
 import { crearRepositorioProductosMemoria } from '../../src/infra/memoria/repositorioProductosMemoria.js';
 import { crearRepositorioVentasMemoria } from '../../src/infra/memoria/repositorioVentasMemoria.js';
@@ -59,12 +61,14 @@ export function crearContexto({
   );
   const repositorioCajas = crearRepositorioCajasMemoria();
   const repositorioVentas = crearRepositorioVentasMemoria();
+  const repositorioAnulaciones = crearRepositorioAnulacionesMemoria();
   const almacenIdempotencia = crearAlmacenIdempotenciaMemoria();
 
   const dependencias = {
     repositorioProductos,
     repositorioCajas,
     repositorioVentas,
+    repositorioAnulaciones,
     almacenIdempotencia,
     generadorIds,
     reloj,
@@ -74,9 +78,11 @@ export function crearContexto({
     repositorioProductos,
     repositorioCajas,
     repositorioVentas,
+    repositorioAnulaciones,
     almacenIdempotencia,
     abrirCaja: (datos) => abrirCaja(dependencias, datos),
     registrarVenta: (datos) => registrarVenta(dependencias, datos),
+    anularVenta: (datos) => anularVenta(dependencias, datos),
     cerrarCaja: (datos) => cerrarCaja(dependencias, datos),
     obtenerCajaActual: (datos) => obtenerCajaActual(dependencias, datos),
     obtenerVenta: (datos) => obtenerVenta(dependencias, datos),
