@@ -70,8 +70,9 @@ test('flujo de anulación: cajero recibe 403, supervisor anula, reintento y dobl
     usuario: cajeroUsuario,
     headers: { 'Idempotency-Key': 'venta-anula-1' },
     body: {
+      // el arroz tiene 10 % de descuento (regla de Franco): 220000 - 22000
       items: [{ productoId: 'prod-5', cantidad: 1 }],
-      pagos: [{ medio: 'efectivo', montoCentavos: 220000 }],
+      pagos: [{ medio: 'efectivo', montoCentavos: 198000 }],
     },
   });
   assert.equal(venta.respuesta.status, 201);

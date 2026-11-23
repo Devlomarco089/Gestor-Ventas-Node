@@ -7,8 +7,10 @@ import { registrarVenta } from './dominio/casos-uso/registrarVenta.js';
 import { Producto } from './dominio/producto.js';
 import { crearGeneradorIds } from './infra/generadorIds.js';
 import { crearAlmacenIdempotenciaMemoria } from './infra/memoria/almacenIdempotenciaMemoria.js';
-import { datosSemilla } from './infra/memoria/datosSemilla.js';
+import { crearBloqueosMemoria } from './infra/memoria/bloqueosMemoria.js';
+import { datosSemilla, reglasDescuentoSemilla } from './infra/memoria/datosSemilla.js';
 import { crearRepositorioAnulacionesMemoria } from './infra/memoria/repositorioAnulacionesMemoria.js';
+import { crearRepositorioDescuentosMemoria } from './infra/memoria/repositorioDescuentosMemoria.js';
 import { crearRepositorioCajasMemoria } from './infra/memoria/repositorioCajasMemoria.js';
 import { crearRepositorioProductosMemoria } from './infra/memoria/repositorioProductosMemoria.js';
 import { crearRepositorioVentasMemoria } from './infra/memoria/repositorioVentasMemoria.js';
@@ -24,6 +26,9 @@ export function crearComposicion() {
   const almacenIdempotencia = crearAlmacenIdempotenciaMemoria();
   const generadorIds = crearGeneradorIds();
   const reloj = crearRelojSistema();
+  // parte de Franco: reglas de descuento y bloqueos para la carrera de la ultima unidad
+  const repositorioDescuentos = crearRepositorioDescuentosMemoria(reglasDescuentoSemilla);
+  const bloqueos = crearBloqueosMemoria();
 
   const dependencias = {
     repositorioProductos,
@@ -33,6 +38,8 @@ export function crearComposicion() {
     almacenIdempotencia,
     generadorIds,
     reloj,
+    repositorioDescuentos,
+    bloqueos,
   };
 
   return {

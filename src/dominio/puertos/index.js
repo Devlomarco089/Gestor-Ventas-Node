@@ -54,4 +54,16 @@
  * @property {() => Date} ahora
  */
 
+/**
+ * Reglas de descuento (Franco)
+ * @typedef {Object} RepositorioDescuentos
+ * @property {() => Promise<Object[]>} listar
+ */
+
+/**
+ * Bloqueos por clave, en memoria o con SELECT FOR UPDATE cuando haya base (Franco)
+ * @typedef {Object} Bloqueos
+ * @property {(claves: string[], tarea: () => Promise<any>) => Promise<any>} conBloqueo
+ */
+
 export {};
