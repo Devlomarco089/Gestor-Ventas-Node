@@ -7,17 +7,20 @@ import {
   multiplicarCentavos,
   sumarCentavos,
 } from './dinero.js';
+import { mejorDescuento } from './descuentos.js';
 
 const MEDIOS_DE_PAGO = new Set(['efectivo', 'tarjeta', 'transferencia']);
 
 export class Venta {
-  constructor({ id, cajaId, cajeroId, items, pagos, totalCentavos, fecha }) {
+  constructor({ id, cajaId, cajeroId, items, pagos, totalCentavos, descuentoCentavos = 0, fecha }) {
     this.id = id;
     this.cajaId = cajaId;
     this.cajeroId = cajeroId;
     this.items = items;
     this.pagos = pagos;
     this.totalCentavos = totalCentavos;
+    // cuanto se desconto en total por reglas de descuento (Franco)
+    this.descuentoCentavos = descuentoCentavos;
     this.fecha = fecha;
 
     Object.freeze(this.items);
@@ -25,7 +28,8 @@ export class Venta {
     Object.freeze(this);
   }
 
-  static crear({ id, cajaId, cajeroId, items, pagos, fecha }) {
+  // reglasDescuento es opcional, si no viene la venta queda igual que antes sin descuentos
+  static crear({ id, cajaId, cajeroId, items, pagos, fecha, reglasDescuento = [] }) {
     if (typeof id !== 'string' || id.trim() === '') {
       throw new DatosInvalidos('El id de la venta es obligatorio.');
     }
@@ -57,12 +61,22 @@ export class Venta {
 
       const subtotalCentavos = multiplicarCentavos(item.precioUnitarioCentavos, item.cantidad);
 
+      // descuento de la linea: se elige la mejor regla que aplique (Franco)
+      const { descuentoCentavos, reglaDescuentoId } = mejorDescuento(
+        { productoId: item.productoId, cantidad: item.cantidad, subtotalCentavos },
+        reglasDescuento,
+      );
+
       return Object.freeze({
         productoId: item.productoId,
         nombre: item.nombre,
         cantidad: item.cantidad,
         precioUnitarioCentavos: item.precioUnitarioCentavos,
         subtotalCentavos,
+        descuentoCentavos,
+        reglaDescuentoId,
+        // lo que realmente se cobra por esta linea
+        totalCentavos: subtotalCentavos - descuentoCentavos,
       });
     });
 
@@ -79,8 +93,12 @@ export class Venta {
       });
     });
 
+    // el total de la venta ya viene con los descuentos restados (Franco)
     const totalCentavos = sumarCentavos(
-      itemsNormalizados.map((item) => item.subtotalCentavos),
+      itemsNormalizados.map((item) => item.totalCentavos),
+    );
+    const descuentoCentavos = sumarCentavos(
+      itemsNormalizados.map((item) => item.descuentoCentavos),
     );
     const totalPagosCentavos = sumarCentavos(
       pagosNormalizados.map((pago) => pago.montoCentavos),
@@ -99,6 +117,7 @@ export class Venta {
       items: Object.freeze(itemsNormalizados),
       pagos: Object.freeze(pagosNormalizados),
       totalCentavos,
+      descuentoCentavos,
       fecha,
     });
   }
