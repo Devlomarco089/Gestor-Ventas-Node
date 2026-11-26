@@ -2,6 +2,7 @@
  * @typedef {import('../producto.js').Producto} Producto
  * @typedef {import('../caja.js').Caja} Caja
  * @typedef {import('../venta.js').Venta} Venta
+ * @typedef {import('../anulacion.js').Anulacion} Anulacion
  */
 
 /**
@@ -13,6 +14,7 @@
 
 /**
  * @typedef {Object} RepositorioCajas
+ * @property {(id: string) => Promise<Caja|null>} obtenerPorId
  * @property {(cajeroId: string) => Promise<Caja|null>} obtenerAbiertaPorCajero
  * @property {(caja: Caja) => Promise<void>} guardar
  */
@@ -21,6 +23,13 @@
  * @typedef {Object} RepositorioVentas
  * @property {(id: string) => Promise<Venta|null>} obtenerPorId
  * @property {(venta: Venta) => Promise<void>} guardar
+ */
+
+/**
+ * @typedef {Object} RepositorioAnulaciones
+ * @property {(ventaId: string) => Promise<Anulacion|null>} obtenerPorVentaId
+ * @property {(anulacion: Anulacion) => Promise<void>} guardar
+ * @property {(ventaId: string) => Promise<void>} eliminarPorVentaId
  */
 
 /**

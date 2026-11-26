@@ -12,3 +12,16 @@ export function exigirCajero(usuario) {
 
   return usuario;
 }
+
+export function exigirSupervisor(usuario) {
+  if (
+    !usuario ||
+    typeof usuario.id !== 'string' ||
+    usuario.id.trim() === '' ||
+    usuario.rol !== 'supervisor'
+  ) {
+    throw new SinPermiso('Se requiere rol supervisor.');
+  }
+
+  return usuario;
+}

@@ -48,6 +48,12 @@ export class VentaNoEncontrada extends ErrorDominio {
   }
 }
 
+export class VentaYaAnulada extends ErrorDominio {
+  constructor(mensaje = 'La venta ya fue anulada.') {
+    super('VentaYaAnulada', mensaje);
+  }
+}
+
 export class IdempotenciaConflicto extends ErrorDominio {
   constructor(mensaje = 'La clave de idempotencia ya fue utilizada con otro cuerpo o cajero.') {
     super('IdempotenciaConflicto', mensaje);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-
+import {Caja} from '../../src/dominio/caja.js'
 import {
   admin,
   cajero,
@@ -123,3 +123,33 @@ test('no permite vender en una caja cerrada', async () => {
   const stockDespues = (await contexto.repositorioProductos.obtenerPorId('prod-1')).stock;
   assert.equal(stockDespues, stockAntes);
 });
+
+
+test('anular un pago en efectivo baja el monto esperado de la caja', () => {
+  const fecha = new Date('2026-11-18T10:00:00Z')
+  const caja = Caja.abrir(
+  {
+    id: 'caja-1',
+    cajeroId: 'caj-1',
+    montoInicialCentavos: 1000,
+    fecha,
+    movimientoId: 'mov-0',
+  })
+  caja.agregarPago(
+  {
+     id: 'mov-1',
+    ventaId: 'venta-1',
+    medio: 'efectivo',
+    montoCentavos: 500,
+    fecha,
+  })
+  caja.anularPago(
+  {
+     id: 'mov-2',
+    ventaId: 'venta-1',
+    medio:'efectivo',
+    montoCentavos: 500,
+    fecha,
+  })
+  assert.equal(caja.calcularMontoEsperadoCentavos(), 1000)
+})

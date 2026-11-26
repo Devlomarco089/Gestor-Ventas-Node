@@ -10,6 +10,7 @@ import { crearRutasVentas } from './rutasVentas.js';
 export function crearApp({
   abrirCaja,
   registrarVenta,
+  anularVenta,
   cerrarCaja,
   obtenerCajaActual,
   obtenerVenta,
@@ -36,7 +37,7 @@ export function crearApp({
   app.use(
     '/ventas',
     autenticacionTemporal,
-    crearRutasVentas({ registrarVenta, obtenerVenta }),
+    crearRutasVentas({ registrarVenta, obtenerVenta, anularVenta }),
   );
 
   app.use((_req, _res, next) => {

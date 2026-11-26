@@ -1,0 +1,60 @@
+### Demo de anulación
+### Ajustar @host al PORT del archivo .env. Ejecutar de arriba hacia abajo.
+
+@host = http://localhost:3000
+
+### 1. El cajero abre la caja
+POST {{host}}/cajas/abrir
+Content-Type: application/json
+X-Usuario-Id: cajero-demo
+X-Rol: cajero
+
+{ "montoInicialCentavos": 0 }
+
+### 2. El cajero registra una venta (el arroz tiene 10 % de descuento: 220000 - 22000 = 198000)
+POST {{host}}/ventas
+Content-Type: application/json
+X-Usuario-Id: cajero-demo
+X-Rol: cajero
+Idempotency-Key: demo-venta-1
+
+{
+  "items": [{ "productoId": "prod-5", "cantidad": 1 }],
+  "pagos": [{ "medio": "efectivo", "montoCentavos": 198000 }]
+}
+
+### 3. Un cajero intenta anular: debe responder 403 SinPermiso
+POST {{host}}/ventas/REEMPLAZAR-VENTA-ID/anulacion
+Content-Type: application/json
+X-Usuario-Id: cajero-demo
+X-Rol: cajero
+Idempotency-Key: demo-anular-cajero
+
+{ "motivo": "Intento de cajero" }
+
+### 4. El supervisor anula la venta con motivo: debe responder 201
+POST {{host}}/ventas/REEMPLAZAR-VENTA-ID/anulacion
+Content-Type: application/json
+X-Usuario-Id: sup-demo
+X-Rol: supervisor
+Idempotency-Key: demo-anular-1
+
+{ "motivo": "Error de carga" }
+
+### 5. Reintento con la misma clave: 201 con Idempotent-Replayed: true, sin efectos nuevos
+POST {{host}}/ventas/REEMPLAZAR-VENTA-ID/anulacion
+Content-Type: application/json
+X-Usuario-Id: sup-demo
+X-Rol: supervisor
+Idempotency-Key: demo-anular-1
+
+{ "motivo": "Error de carga" }
+
+### 6. Otra clave para la misma venta: debe responder 409 VentaYaAnulada
+POST {{host}}/ventas/REEMPLAZAR-VENTA-ID/anulacion
+Content-Type: application/json
+X-Usuario-Id: sup-demo
+X-Rol: supervisor
+Idempotency-Key: demo-anular-2
+
+{ "motivo": "Otra vez" }
