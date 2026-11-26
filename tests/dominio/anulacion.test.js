@@ -9,6 +9,7 @@ import {
   VentaNoEncontrada,
 } from '../../src/dominio/errores.js'
 import {Producto} from '../../src/dominio/producto.js'
+import {anularVenta} from '../../src/dominio/casos-uso/anularVenta.js'
 import {cajero, crearContexto, obtenerStocks, ventaBase} from './ayudas.js'
 
 const supervisor = {id: 'sup-1', rol: 'supervisor'}
@@ -202,4 +203,55 @@ test('no anula una venta cuya caja ya está cerrada', async () => {
     }),
     CajaNoAbierta,
   )
+})
+
+test('si falla una escritura a mitad de la anulación se deshace todo y el reintento sale bien', async () => {
+  const contexto = crearContexto()
+  const stockInicial = await obtenerStocks(contexto)
+  const venta = await venderConfirmada(contexto)
+  const stockConVenta = await obtenerStocks(contexto)
+
+  let numeroIds = 0
+  const dependencias = {
+    repositorioVentas: contexto.repositorioVentas,
+    repositorioCajas: contexto.repositorioCajas,
+    repositorioProductos: contexto.repositorioProductos,
+    // falla al guardar la anulación, despues de haber guardado stock y caja
+    repositorioAnulaciones: {
+      ...contexto.repositorioAnulaciones,
+      async guardar() {
+        throw new Error('falla simulada')
+      },
+    },
+    almacenIdempotencia: contexto.almacenIdempotencia,
+    generadorIds: {generar: () => `falla-${++numeroIds}`},
+    reloj: {ahora: () => new Date('2026-01-01T10:00:00.000Z')},
+  }
+
+  await assert.rejects(
+    () => anularVenta(dependencias, {
+      usuario: supervisor,
+      claveIdempotencia: 'anular-falla',
+      ventaId: venta.id,
+      motivo: 'Falla',
+    }),
+    /falla simulada/,
+  )
+
+  // todo volvió a como estaba después de la venta
+  assert.deepEqual(await obtenerStocks(contexto), stockConVenta)
+  const cajaTrasFalla = await contexto.obtenerCajaActual({usuario: cajero})
+  assert.equal(cajaTrasFalla.calcularMontoEsperadoCentavos(), 1500)
+  assert.equal(await contexto.repositorioAnulaciones.obtenerPorVentaId(venta.id), null)
+
+  // el reintento con otra clave anula bien y deja todo consistente
+  await contexto.anularVenta({
+    usuario: supervisor,
+    claveIdempotencia: 'anular-ok',
+    ventaId: venta.id,
+    motivo: 'Reintento',
+  })
+  assert.deepEqual(await obtenerStocks(contexto), stockInicial)
+  const cajaFinal = await contexto.obtenerCajaActual({usuario: cajero})
+  assert.equal(cajaFinal.calcularMontoEsperadoCentavos(), 0)
 })

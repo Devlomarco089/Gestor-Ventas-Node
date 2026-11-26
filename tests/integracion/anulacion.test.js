@@ -139,3 +139,16 @@ test('rechaza la anulación sin Idempotency-Key o sin motivo', async () => {
   });
   assert.equal(sinMotivo.respuesta.status, 400);
 });
+
+test('sin encabezados de sesión la anulación responde 401', async () => {
+  const respuesta = await fetch(`${baseUrl}/ventas/venta-x/anulacion`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Idempotency-Key': 'anular-sin-sesion',
+    },
+    body: JSON.stringify({ motivo: 'Sin sesión' }),
+  });
+
+  assert.equal(respuesta.status, 401);
+});

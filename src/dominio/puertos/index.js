@@ -29,6 +29,7 @@
  * @typedef {Object} RepositorioAnulaciones
  * @property {(ventaId: string) => Promise<Anulacion|null>} obtenerPorVentaId
  * @property {(anulacion: Anulacion) => Promise<void>} guardar
+ * @property {(ventaId: string) => Promise<void>} eliminarPorVentaId
  */
 
 /**

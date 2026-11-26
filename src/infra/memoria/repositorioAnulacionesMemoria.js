@@ -10,5 +10,10 @@ export function crearRepositorioAnulacionesMemoria() {
     async guardar(anulacion) {
       anulaciones.set(anulacion.ventaId, anulacion);
     },
+
+    // solo se usa para deshacer una anulación que no terminó de guardarse
+    async eliminarPorVentaId(ventaId) {
+      anulaciones.delete(ventaId);
+    },
   };
 }
